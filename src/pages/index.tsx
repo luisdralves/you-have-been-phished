@@ -50,6 +50,8 @@ const Home = ({ email }: Props) => {
 
         <p>It could have had disastrous consequences, but fortunately this is only a simulation</p>
 
+        <p>Please do not share what happened with anyone besides Miguel, the goal is to see how many people click or report the link within a time period</p>
+
         <table style={{ borderSpacing: '24px 8px' }}>
           <tbody>
             <tr>
