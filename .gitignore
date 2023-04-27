@@ -12,6 +12,9 @@
 /.next/
 /out/
 
+# prisma
+/prisma/*.db
+
 # production
 /build
 
