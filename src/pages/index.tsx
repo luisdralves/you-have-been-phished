@@ -1,7 +1,7 @@
-import { Dongle, Rubik_Wet_Paint } from 'next/font/google'
-import { GetServerSideProps } from 'next'
+import { Dongle, Rubik_Wet_Paint } from 'next/font/google';
+import { GetServerSideProps } from 'next';
 import { ServerAxios } from 'src/core/axios';
-import Head from 'next/head'
+import Head from 'next/head';
 
 const displayFont = Rubik_Wet_Paint({
   subsets: ['latin'],
@@ -14,7 +14,7 @@ const sansFont = Dongle({
 });
 
 type Props = {
-  email: string | null,
+  email: string | null;
   stats: {
     unique: number;
     total: number;
@@ -69,15 +69,21 @@ const Home = ({ email, stats }: Props) => (
 );
 
 export const getServerSideProps: GetServerSideProps = async ctx => {
-  const email = (() => {
+  const [emailHash, email] = await (async () => {
     try {
-      return Buffer.from(ctx.query?.id as string, 'base64').toString('ascii');
+      const emailBuffer = Buffer.from(ctx.query?.id as string, 'base64');
+      const emailHash = await crypto.subtle.digest("SHA-1", emailBuffer);
+
+      return [
+        Buffer.from(emailHash).toString('base64'),
+        emailBuffer.toString('ascii')
+      ];
     } catch {
-      return null;
+      return [null, null];
     }
   })();
 
-  await ServerAxios.post('/visit', { email });
+  await ServerAxios.post('/visit', { email: emailHash });
   const stats = await ServerAxios.get('/stats');
 
   const props: Props = {
