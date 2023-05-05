@@ -29,17 +29,19 @@ const Home = ({ email, stats }: Props) => (
     </Head>
 
     <main className={sansFont.className}>
-      <h1 className={displayFont.className} style={{ color: '#0f0', fontSize: 96 }}>
+      <h1 className={displayFont.className} style={{ color: '#0f0', fontSize: 72 }}>
         You have been phished
       </h1>
 
-      <h2 style={{ color: '#0af', fontSize: 64 }}>
+      <h2 style={{ color: '#0af', fontSize: 54 }}>
         You have clicked a link without carefully inspecting it first
       </h2>
 
       <p>It could have had disastrous consequences, but fortunately this is only a simulation</p>
 
-      <p>Please do not share what happened with anyone besides Miguel, the goal is to see how many people click or report the link within a certain time period</p>
+      <p style={{ border:'solid 1px #f008', padding: '24px' }}>
+        <b><u>Please do not share what happened with anyone besides Miguel</u></b>, the goal is to see how many people click or report the link within a certain time period
+      </p>
 
       {stats?.total && (
         <table style={{ borderSpacing: '24px 8px' }}>
@@ -71,6 +73,7 @@ const Home = ({ email, stats }: Props) => (
 export const getServerSideProps: GetServerSideProps = async ctx => {
   const [emailHash, email] = await (async () => {
     try {
+      const crypto = require('crypto');
       const emailBuffer = Buffer.from(ctx.query?.id as string, 'base64');
       const emailHash = await crypto.subtle.digest("SHA-1", emailBuffer);
 
