@@ -1,7 +1,9 @@
 import { Dongle, Rubik_Wet_Paint } from 'next/font/google';
 import { GetServerSideProps } from 'next';
-import { ServerAxios } from 'src/core/axios';
 import Head from 'next/head';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const displayFont = Rubik_Wet_Paint({
   subsets: ['latin'],
@@ -21,7 +23,7 @@ type Props = {
   };
 }
 
-const Home = ({ email, stats }: Props) => (
+const Home = ({ stats }: Props) => (
   <>
     <Head>
       <title>You Have Been Phished</title>
@@ -60,12 +62,6 @@ const Home = ({ email, stats }: Props) => (
           </tbody>
         </table>
       )}
-
-      {email ? (
-        <p>Your email is <a href={`mailto:${email}`}>{email}</a></p>
-      ) : (
-        <p>It looks like you managed to hide your email address at least</p>
-      )}
     </main>
   </>
 );
@@ -78,20 +74,47 @@ export const getServerSideProps: GetServerSideProps = async ctx => {
       const emailHash = await crypto.subtle.digest("SHA-1", emailBuffer);
 
       return [
-        Buffer.from(emailHash).toString('base64'),
+        Buffer.from(emailHash).toString('base64') ?? 'null',
         emailBuffer.toString('ascii')
       ];
     } catch {
-      return [null, null];
+      return ['null', null];
     }
   })();
 
-  await ServerAxios.post('/visit', { email: emailHash });
-  const stats = await ServerAxios.get('/stats');
+  const visitor = await prisma.visitor.findUnique({
+    where: { email: emailHash }
+  });
+
+  const previousVisits = visitor?.visits ?? 0
+  await prisma.visitor.upsert({
+    where: { email: emailHash },
+    create: {
+      email: emailHash,
+      visits: 1
+    },
+    update: {
+      visits: previousVisits + 1
+    }
+  });
+
+  const visitors = await prisma.visitor.findMany({
+    where: {
+      visits: {
+        gte: 1
+      }
+    }
+  });
+
+  const total = visitors.reduce((total, {visits}) => total + visits, 0);
+  const unique = visitors.filter(({ email }) => email !== 'null').length;
 
   const props: Props = {
     email,
-    stats: stats.data
+    stats: {
+      total,
+      unique
+    }
   }
 
   return { props }
